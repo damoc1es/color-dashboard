@@ -20,6 +20,7 @@
     <VBox spacing="5">
         <TextField fx:id="fieldColor"/>
         <Button text="Add Color" onAction="#onAddColorClick"/>
+        <Button text="Delete Color" onAction="#onDeleteColorClick"/>
         <Label fx:id="msgText"/>
     </VBox>
 </HBox>

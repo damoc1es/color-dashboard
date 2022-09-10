@@ -8,8 +8,13 @@ public class ColorButton extends Button {
         super(color.toHex());
         clr = color;
         super.setStyle(String.format("-fx-background-color: %s;\n", clr.toHex()) +
+                String.format("-fx-text-fill: %s;\n", clr.getComplementary().toHex()) +
                 "-fx-padding: 10px;\n" +
-                "-fx-font-family: monospace;");
+                "-fx-font-family: Consolas, monospace;" +
+                "-fx-font-weight: bold;" +
+                "-fx-font-size: 1.2em;");
+
+        System.out.printf("%s -> %s%n", clr.toHex(), clr.getComplementary().toHex());
     }
 
     public Color getColor() {

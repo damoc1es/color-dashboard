@@ -3,6 +3,7 @@ package dev.damocles.colordashboard;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -15,6 +16,7 @@ public class ColorDashboard extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(ColorDashboard.class.getResource("color-dashboard-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 600, 450);
         stage.setTitle("Color Dashboard");
+        stage.getIcons().add(new Image("file:icon.png"));
         stage.setScene(scene);
         stage.show();
     }

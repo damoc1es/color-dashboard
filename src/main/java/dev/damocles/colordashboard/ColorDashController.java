@@ -17,67 +17,37 @@ public class ColorDashController {
     public TextField fieldColor;
     public Label msgText;
 
+    private ColorRepository repo;
+
     /**
      * Sets the message from below buttons
      */
     @FXML
-    protected void setMsg(String message) {
+    private void setMsg(String message) {
         msgText.setText(message);
-    }
-
-    /**
-     * Loads from file the colors and sorts it according to the Color::compare
-     * adding them to the colorGrid
-     */
-    protected void loadFromFile() {
-        try {
-            File file = new File(ColorDashboard.colorsFilename);
-            Scanner sc = new Scanner(file);
-            colorGrid.getChildren().clear();
-            ObservableList<Node> list = colorGrid.getChildren();
-
-            ArrayList<Color> arr = new ArrayList<>();
-
-            while (sc.hasNextLine()) {
-                String string = sc.nextLine();
-                if(Color.isValidString(string)) {
-                    Color added = new Color(string);
-                    arr.add(added);
-                }
-            }
-
-            arr.sort(Color::compare);
-
-            for(Color clr : arr) {
-                ColorButton colorBtn = new ColorButton(clr);
-                colorBtn.setOnMouseClicked(mouseEvent -> btnClick(colorBtn.getColor().toHex()));
-
-                list.add(colorBtn);
-            }
-        } catch(FileNotFoundException e) {
-            setMsg("No previous file found");
-        }
-    }
-
-    /**
-     * Writes to file the existing colors
-     */
-    protected void writeToFile() {
-        try(FileWriter writer = new FileWriter(ColorDashboard.colorsFilename, false) ){
-            ObservableList<Node> list = colorGrid.getChildren();
-
-            for(Node x : list) {
-                if(x instanceof ColorButton)
-                    writer.write(((ColorButton) x).getColor().toHex()+'\n');
-            }
-        } catch (IOException e) {
-            setMsg("IO Exception");
-        }
     }
 
     @FXML
     public void initialize() {
-        loadFromFile();
+        try {
+            repo = new ColorRepository(ColorDashboard.colorsFilename);
+            updateGrid();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void updateGrid() {
+        ArrayList<Color> colors = repo.getColors();
+        colorGrid.getChildren().clear();
+        ObservableList<Node> list = colorGrid.getChildren();
+
+        for(Color color : colors) {
+            ColorButton colorBtn = new ColorButton(color);
+            colorBtn.setOnMouseClicked(mouseEvent -> btnClick(colorBtn.getColor().toHex()));
+
+            list.add(colorBtn);
+        }
     }
 
     /**
@@ -98,38 +68,24 @@ public class ColorDashController {
      * saves to file changes (including sorting)
      */
     @FXML
-    protected void onAddColorClick() {
+    public void onAddColorClick() {
         String clrString = fieldColor.getText();
 
         if(Color.isValidString(clrString)) {
             Color added = new Color(clrString);
-            ObservableList<Node> list = colorGrid.getChildren();
 
-            boolean duplicate = false;
-            for(Node x : list) {
-                if(x instanceof ColorButton && Objects.equals(((ColorButton) x).getColor().toHex(), added.toHex()))
-                    duplicate = true;
-            }
-            if(duplicate) {
-                setMsg("Color already exists");
-                return;
-            }
-            ColorButton colorBtn = new ColorButton(added);
-            colorBtn.setOnMouseClicked(mouseEvent -> btnClick(colorBtn.getColor().toHex()));
-
-            list.add(colorBtn);
-
-            try(FileWriter writer = new FileWriter(ColorDashboard.colorsFilename, true) ){
-                writer.write(added.toHex()+'\n');
-                setMsg("");
+            try {
+                if(!repo.store(added)) {
+                    setMsg("Color already exists");
+                    return;
+                }
+                updateGrid();
             } catch (IOException e) {
-                setMsg("IO Exception");
+                setMsg("Error updating file.");
             }
-            loadFromFile();
-            writeToFile();
         }
         else
-            setMsg("Error! Invalid format.");
+            setMsg("Color format not valid.");
     }
 
     /**
@@ -141,9 +97,13 @@ public class ColorDashController {
         String colorString = fieldColor.getText();
 
         if(Color.isValidString(colorString)) {
-            ObservableList<Node> list = colorGrid.getChildren();
-            list.removeIf(x -> x instanceof ColorButton && Objects.equals(((ColorButton) x).getColor().toHex(), new Color(colorString).toHex()));
-            writeToFile();
-        } else setMsg("Color not valid.");
+            try {
+                if(!repo.remove(new Color(colorString)))
+                    setMsg("Color not in list.");
+                updateGrid();
+            } catch (IOException e) {
+                setMsg("Error updating file.");
+            }
+        } else setMsg("Color format not valid.");
     }
 }

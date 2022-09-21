@@ -4,6 +4,7 @@ import javafx.scene.control.Button;
 
 public class ColorButton extends Button {
     private final Color clr;
+
     ColorButton(Color color) {
         super(color.toHex());
         clr = color;
@@ -13,10 +14,11 @@ public class ColorButton extends Button {
                 "-fx-font-family: Consolas, monospace;" +
                 "-fx-font-weight: bold;" +
                 "-fx-font-size: 1.2em;");
-
-        System.out.printf("%s -> %s%n", clr.toHex(), clr.getComplementary().toHex());
     }
 
+    /**
+     * @return assigned color
+     */
     public Color getColor() {
         return clr;
     }

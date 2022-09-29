@@ -8,6 +8,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.FlowPane;
+import javafx.util.Pair;
 
 import java.io.*;
 import java.util.*;
@@ -18,6 +19,8 @@ public class ColorDashController {
     public Label msgText;
 
     private ColorRepository repo;
+
+    private final ArrayList<Pair<String, String>> undoList = new ArrayList<>();
 
     /**
      * Sets the message from below buttons
@@ -65,20 +68,21 @@ public class ColorDashController {
     /**
      * Adds the color specified in field (if it exists)
      * otherwise sets message of what happened
-     * saves to file changes (including sorting)
+     * saves to file changes
      */
     @FXML
     public void onAddColorClick() {
-        String clrString = fieldColor.getText();
+        String colorString = fieldColor.getText();
 
-        if(Color.isValidString(clrString)) {
-            Color added = new Color(clrString);
+        if(Color.isValidString(colorString)) {
+            Color added = new Color(colorString);
 
             try {
                 if(!repo.store(added)) {
                     setMsg("Color already exists");
                     return;
                 }
+                undoList.add(new Pair<>("add", added.toHex()));
                 updateGrid();
             } catch (IOException e) {
                 setMsg("Error updating file.");
@@ -90,20 +94,52 @@ public class ColorDashController {
 
     /**
      * Remove the color from field (if it exists)
-     * saves to file changes (including sorting)
+     * saves to file changes
      */
     @FXML
     public void onDeleteColorClick() {
         String colorString = fieldColor.getText();
 
         if(Color.isValidString(colorString)) {
+            Color deleted = new Color(colorString);
+
             try {
-                if(!repo.remove(new Color(colorString)))
+                if(!repo.remove(deleted)) {
                     setMsg("Color not in list.");
+                    return;
+                }
+                undoList.add(new Pair<>("delete", deleted.toHex()));
                 updateGrid();
             } catch (IOException e) {
                 setMsg("Error updating file.");
             }
         } else setMsg("Color format not valid.");
+    }
+
+    /**
+     * Undoes the last action (add/delete)
+     * saves to file changes
+     */
+    @FXML
+    public void onUndoClick() {
+        if(undoList.isEmpty()) {
+            setMsg("No action to undo");
+            return;
+        }
+
+        Pair<String, String> action = undoList.get(undoList.size()-1);
+        try {
+            if(Objects.equals(action.getKey(), "add")) {
+                repo.remove(new Color(action.getValue()));
+            } else if (Objects.equals(action.getKey(), "delete")) {
+                repo.store(new Color(action.getValue()));
+            }
+
+            updateGrid();
+        } catch (IOException e) {
+            setMsg("Error updating file.");
+        }
+
+        undoList.remove(undoList.size()-1);
     }
 }

@@ -142,4 +142,43 @@ public class ColorDashController {
 
         undoList.remove(undoList.size()-1);
     }
+
+    /**
+     * Tries to generate a Color that isn't yet stored.
+     * @param cap the maximum tries it does before it gives up
+     * @return generated Color
+     */
+    private Color generateRandom(int cap) {
+        Random random = new Random();
+        Color color;
+        int i = 0;
+        do {
+            int R = random.nextInt(256);
+            int G = random.nextInt(256);
+            int B = random.nextInt(256);
+            color = new Color(String.format("%d,%d,%d", R, G, B));
+            i++;
+        } while (repo.find(color) && i < cap);
+        return color;
+    }
+
+    /**
+     * Tries to generate and add a new Color
+     * saves to file changes
+     */
+    @FXML
+    public void onAddRandomClick() {
+        Color generated = generateRandom(10000);
+
+        try {
+            if(!repo.store(generated)) {
+                setMsg("Too many colors already existing");
+                return;
+            }
+            undoList.add(new Pair<>("add", generated.toHex()));
+            updateGrid();
+        } catch (IOException e) {
+            setMsg("Error updating file.");
+        }
+    }
 }

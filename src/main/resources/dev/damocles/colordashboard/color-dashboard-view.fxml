@@ -21,6 +21,7 @@
         <TextField fx:id="fieldColor"/>
         <Button text="Add Color" onAction="#onAddColorClick"/>
         <Button text="Delete Color" onAction="#onDeleteColorClick"/>
+        <Button text="Add Random" onAction="#onAddRandomClick"/>
         <Button text="Undo" onAction="#onUndoClick"/>
         <Label fx:id="msgText"/>
     </VBox>
